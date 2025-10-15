@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 import axios from 'axios';
+import cron from 'node-cron';
+
 
 dotenv.config();
 
@@ -7,17 +9,30 @@ const strapiToken = process.env.API_TOKEN;
 const tmdbApiKey = process.env.TMDB_API_KEY;
 const STRAPI_API_URL = "http://localhost:1337/api/movies";
 
-const fetchmovies =async () =>{
+const movieExists = async (title) => {
   try {
-    console.log("TMDB Key:", tmdbApiKey); // Vérification
-    console.log("Strapi Token:", strapiToken);
+    const res = await axios.get(`${STRAPI_API_URL}?filters[title][$eq]=${encodeURIComponent(title)}`, {
+      headers: { Authorization: `Bearer ${strapiToken}` },
+    });
+    return res.data.data.length > 0;
+  } catch (err) {
+    console.error("Erreur check film existant:", err.response?.data || err.message);
+    return false;
+  }
+};
+
+const fetchMovies =async () =>{
+  try {
   const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=fr-FR&page=1`;
  const res = await axios.get(tmdbUrl)
  const movies = res.data.results;
- console.log(movies);
- console.log(`✅ ${movies.length} films récupérés depuis TMDB`);
 
  for (const movie of movies) {
+   const exists = await movieExists(movie.title);
+    if (exists) {
+    console.log(`⏩ ${movie.title} déjà présent, pas d’insertion`);
+    continue;
+  }
   const data = {
     data: {
       title: movie.title,
@@ -33,7 +48,6 @@ const fetchmovies =async () =>{
 
   try {
     await axios.post(STRAPI_API_URL, data, { headers });
-    console.log(`🎬 ${movie.title} ajouté dans Strapi`);
   } catch (err) {
     console.error(`Erreur pour ${movie.title}:`, err.response?.data || err.message);
   }
@@ -43,4 +57,9 @@ const fetchmovies =async () =>{
 }
 } 
 
-fetchmovies()
+cron.schedule('* * * * *', () => {
+  console.log('⏰ Cron job lancé toutes les minutes');
+  fetchMovies();
+});
+
+fetchMovies()
