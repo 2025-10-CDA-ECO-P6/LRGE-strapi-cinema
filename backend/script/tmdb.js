@@ -30,7 +30,7 @@ const fetchMovies =async () =>{
  for (const movie of movies) {
    const exists = await movieExists(movie.title);
     if (exists) {
-    console.log(`⏩ ${movie.title} déjà présent, pas d’insertion`);
+    console.log(`${movie.title} déjà présent, pas d’insertion`);
     continue;
   }
   const data = {
@@ -58,7 +58,7 @@ const fetchMovies =async () =>{
 } 
 
 cron.schedule('* * * * *', () => {
-  console.log('⏰ Cron job lancé toutes les minutes');
+  console.log('Cron job lancé toutes les minutes');
   fetchMovies();
 });
 
