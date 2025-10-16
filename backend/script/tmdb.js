@@ -21,45 +21,43 @@ const movieExists = async (title) => {
   }
 };
 
-const fetchMovies =async () =>{
+const fetchMovies = async () => {
   try {
-  const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=fr-FR&page=1`;
- const res = await axios.get(tmdbUrl)
- const movies = res.data.results;
+    const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=fr-FR&page=1`;
+    const res = await axios.get(tmdbUrl)
+    const movies = res.data.results;
 
- for (const movie of movies) {
-   const exists = await movieExists(movie.title);
-    if (exists) {
-    console.log(`${movie.title} déjà présent, pas d’insertion`);
-    continue;
+    for (const movie of movies) {
+      const exists = await movieExists(movie.title);
+        if (exists) {
+        console.log(`${movie.title} déjà présent, pas d’insertion`);
+        continue;
   }
-  const data = {
-    data: {
-      title: movie.title,
-      description: movie.overview,
-      release_date: movie.release_date,
-      director: movie.director || "Inconnu",
-    },
-  };
+      const data = {
+        data: {
+          title: movie.title,
+          description: movie.overview,
+          release_date: movie.release_date,
+          director: movie.director || "Inconnu",
+        },
+      };
 
-  const headers = {
-    Authorization: `Bearer ${strapiToken}`,
-  };
+      const headers = {
+        Authorization: `Bearer ${strapiToken}`,
+      };
 
-  try {
-    await axios.post(STRAPI_API_URL, data, { headers });
-  } catch (err) {
-    console.error(`Erreur pour ${movie.title}:`, err.response?.data || err.message);
+      try {
+        await axios.post(STRAPI_API_URL, data, { headers });
+      } catch (err) {
+        console.error(`Erreur pour ${movie.title}:`, err.response?.data || err.message);
+      }
+    }
+  } catch(error) {
+      console.error("pas possible de récupérer les films, erreur: ", error)
   }
-}
-} catch(error) {
-    console.error("pas possible de récupérer les films, erreur: ", error)
-}
 } 
 
-cron.schedule('* * * * *', () => {
-  console.log('Cron job lancé toutes les minutes');
-  fetchMovies();
-});
+const job = cron.schedule('* * * * *', () => { console.log('⏰ Cron job lancé'); fetchMovies(); }, { scheduled: false });
 
 fetchMovies()
+job.start();
