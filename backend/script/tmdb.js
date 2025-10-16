@@ -66,7 +66,7 @@ const fetchMovies = async () => {
 };
 
 const job = cron.schedule(
-  "* * * * *",
+  "*0 0 */1 * *",
   () => {
     console.log("⏰ Cron job lancé");
     fetchMovies();
