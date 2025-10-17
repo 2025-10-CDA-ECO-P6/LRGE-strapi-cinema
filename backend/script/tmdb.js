@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
-import axios from "axios";
-import cron from "node-cron";
+const dotenv = require("dotenv");
+const axios = require("axios");
+const cron = require("node-cron");
 
 dotenv.config();
 
@@ -31,6 +31,8 @@ const fetchMovies = async () => {
     const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbApiKey}&language=fr-FR&page=1`;
     const res = await axios.get(tmdbUrl);
     const movies = res.data.results;
+
+    console.log(movies);
 
     for (const movie of movies) {
       const exists = await movieExists(movie.title);
